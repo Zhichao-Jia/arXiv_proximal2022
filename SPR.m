@@ -30,7 +30,7 @@ D = sqrt(-8 * glb / (rhohat - rho));
 tau = (rhohat - rho) * epsilon^2 / (4 * rhohat * (2 * rhohat - rho));
 x0 = 0.25 * ones(n, 1);
 M = 2 * max(max(abs(A)))^2 * domain * n * sqrt(n);
-L0 = 8 * M^2 - 6 * rhohat * glb;
+L0 = 9 * M^2 - 6 * rhohat * glb;
 L1 = 6 * rhohat;
 
 
