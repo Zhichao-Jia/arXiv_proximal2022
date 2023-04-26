@@ -5,7 +5,7 @@ global m n p rho rhohat M epsilon flb glb domain A b xc
 
 m = 120;
 n = 120;
-p = 90;
+p = 320;
 domain = 10;
 epsilon = 0.01;
 flb = 0;
@@ -14,12 +14,18 @@ glb = -p;
 
 % generate data
 
-xstar = [zeros(n*3/4, 1); (5 * rand(n/4, 1) + 5) .* (2 * binornd(1, 0.5, n/4, 1) - 1)];
+% load('data_inactive','xstar','A','noise','b');
+xstar = [zeros(n*3/4, 1); 5 * rand(n/4, 1) + 5];
 xstar = xstar(randperm(n));
 A = normrnd(0, 1, m, n);
 noise = randn(m, 1);
 b = (A * xstar).^2 + noise;
-% load('data_inactive','xstar','A','noise','b');
+
+x0 = normrnd(0, 0.1, n, 1);
+while g(x0) > 0
+    x0 = normrnd(0, 0.1, n, 1);
+end
+% load('data_inactive_','xstar','A','noise','b','x0');
 
 
 % set parameters
@@ -28,7 +34,6 @@ rho = 3;
 rhohat = rho * 2;
 D = sqrt(-8 * glb / (rhohat - rho));
 tau = (rhohat - rho) * epsilon^2 / (4 * rhohat * (2 * rhohat - rho));
-x0 = 0.25 * ones(n, 1);
 M = 2 * max(max(abs(A)))^2 * domain * n * sqrt(n);
 L0 = 9 * M^2 - 6 * rhohat * glb;
 L1 = 6 * rhohat;
@@ -143,64 +148,64 @@ opt_value = f(optimal_x);
 % plot the figures
 
 figure;
-semilogy(0:size(x_list, 2)-1, f_list - opt_value, 'k', LineWidth=2);
+semilogy((0:size(x_list, 2)-1)*T, f_list - opt_value, 'k', LineWidth=2);
 title('Objective value');
-xlabel('Iterations');
+xlabel('Subgradient evaluations');
 ylabel('f(x_k)-f(x_{lo})');
 if stop > 0
-    xline(stop-1, '--k', LineWidth=2);
+    xline((stop-1)*T, '--k', LineWidth=2);
 end
 set(gca, 'FontSize', 20);
 
 figure;
-semilogy(0:size(x_list, 2)-1, g_list, 'k', LineWidth=2);
+semilogy((0:size(x_list, 2)-1)*T, g_list, 'k', LineWidth=2);
 title('Feasibility');
-xlabel('Iterations');
+xlabel('Subgradient evaluations');
 ylabel('g(x_k)');
 if stop > 0
-    xline(stop-1, '--k', LineWidth=2);
+    xline((stop-1)*T, '--k', LineWidth=2);
 end
 set(gca, 'FontSize', 20);
 
 figure;
-semilogy(0:size(x_list, 2)-1, gradFJ_list, 'k', LineWidth=2);
+semilogy((0:size(x_list, 2)-1)*T, gradFJ_list, 'k', LineWidth=2);
 title('FJ stationarity');
-xlabel('Iterations');
+xlabel('Subgradient evaluations');
 ylabel('||\gamma_{k0}\zeta_{fk}+\gamma_k\zeta_{gk}||');
 if stop > 0
-    xline(stop-1, '--k', LineWidth=2);
+    xline((stop-1)*T, '--k', LineWidth=2);
 end
 set(gca, 'FontSize', 20);
 
 figure;
-plot(0:size(x_list, 2)-1, 1-gamma_list, ':k', LineWidth=2);
+plot((0:size(x_list, 2)-1)*T, 1-gamma_list, ':k', LineWidth=2);
 hold on
-plot(0:size(x_list, 2)-1, gamma_list, 'k', LineWidth=2);
+plot((0:size(x_list, 2)-1)*T, gamma_list, 'k', LineWidth=2);
 title('\gamma_{k0} and \gamma_k');
-xlabel('Iterations');
+xlabel('Subgradient evaluations');
 if stop > 0
-    xline(stop-1, '--k', LineWidth=2);
+    xline((stop-1)*T, '--k', LineWidth=2);
 end
 legend('\gamma_{k0}', '\gamma_k');
 set(gca, 'FontSize', 20);
 
 figure;
-semilogy(0:size(x_list, 2)-1, gradKKT_list, 'k', LineWidth=2);
+semilogy((0:size(x_list, 2)-1)*T, gradKKT_list, 'k', LineWidth=2);
 title('KKT stationarity');
-xlabel('Iterations');
+xlabel('Subgradient evaluations');
 ylabel('||\zeta_{fk}+\lambda_k\zeta_{gk}||');
 if stop > 0
-    xline(stop-1, '--k', LineWidth=2);
+    xline((stop-1)*T, '--k', LineWidth=2);
 end
 set(gca, 'FontSize', 20);
 
 figure;
-plot(0:size(x_list, 2)-1, lambda_list, 'k', LineWidth=2);
+plot((0:size(x_list, 2)-1)*T, lambda_list, 'k', LineWidth=2);
 title('Lagrange multipliers \lambda_k');
-xlabel('Iterations');
+xlabel('Subgradient evaluations');
 ylabel('\lambda_k');
 if stop > 0
-    xline(stop-1, '--k', LineWidth=2);
+    xline((stop-1)*T, '--k', LineWidth=2);
 end
 set(gca, 'FontSize', 20);
 

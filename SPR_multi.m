@@ -3,9 +3,9 @@ global m n p rho rhohat epsilon flb glb domain A b xc
 
 % initialize, m*n for dimension, p for SCAD RHS, domain [-x,x]
 
-m = 60;
+m = 120;
 n = 120;
-p = 91;
+p = 320;
 domain = 10;
 epsilon = 0.01;
 flb = 0;
@@ -17,18 +17,22 @@ glb = -p;
 rho = 3;
 rhohat = rho * 2;
 tau = (rhohat - rho) * epsilon^2 / (4 * rhohat * (2 * rhohat - rho));
-x0 = 0.25 * ones(n, 1);
 
 
 % initialize numbers of iterations
 
-K = 100
-T = 1000
+K = 1000
+T = 10000
 
 
-% set the list
+% set the lists
 
-GRAD_list = [];
+GRADFJ_list1 = [];
+GRADKKT_list1 = [];
+GRADFJ_list2 = [];
+GRADKKT_list2 = [];
+GRADFJ_list3 = [];
+GRADKKT_list3 = [];
 
 
 % run the algorithm
@@ -42,10 +46,15 @@ for trails = 1:50
     A = normrnd(0, 1, m, n);
     noise = randn(m, 1);
     b = (A * xstar).^2 + noise;
+    x0 = normrnd(0, 0.1, n, 1);
+    while g(x0) > 0
+        x0 = normrnd(0, 0.1, n, 1);
+    end
 
 
     x_list = [x0];
-    grad_list = [];
+    gradFJ_list = [];
+    gradKKT_list = [];
     x = x0;
 
     for k = 1:K
@@ -80,11 +89,21 @@ for trails = 1:50
 
         % save the results to the list
 
-        % grad_list(end+1) = rhohat * norm(x - x_list(:,end));
-        grad_list(end+1) = (1 + alphag / alphaf) * rhohat * norm(x - x_list(:,end));
+        gradFJ_list(end+1) = rhohat * norm(x - x_list(:,end));
+        gradKKT_list(end+1) = (1 + alphag / alphaf) * rhohat * norm(x - x_list(:,end));
 
 
-        % stop when reaching the max number of iterations
+        % save the results, and stop when reaching the max number of iterations
+
+        if k == K / 100
+            GRADFJ_list1(end+1) = gradFJ_list(end);
+            GRADKKT_list1(end+1) = gradKKT_list(end);
+        end
+
+        if k == K / 10
+            GRADFJ_list2(end+1) = gradFJ_list(end);
+            GRADKKT_list2(end+1) = gradKKT_list(end);
+        end
 
         if k == K
             break;
@@ -92,15 +111,21 @@ for trails = 1:50
 
 
         x_list(:,end+1) = x;
+
+        % show some data during iterations
+
+        if mod(k,K/10) == 0
+            k / (K / 10)
+        end
     end
 
 
-    GRAD_list(end+1) = grad_list(end);
+    GRADFJ_list3(end+1) = gradFJ_list(end);
+    GRADKKT_list3(end+1) = gradKKT_list(end);
 
     % show some data during iterations
 
     trails
-    grad_list(end)
 end
 
 % save('m1k1t1','GRAD_list');
@@ -108,8 +133,16 @@ end
 
 % compute mean and variance
 
-mean(GRAD_list)
-var(GRAD_list)
+disp(['FJ Results:']);
+disp(['K=' num2str(K/100) ', T=' num2str(T), ': median is ' num2str(median(GRADFJ_list1)) ', mean is ' num2str(mean(GRADFJ_list1)) ', variance is ' num2str(var(GRADFJ_list1))]);
+disp(['K=' num2str(K/10) ', T=' num2str(T), ': median is ' num2str(median(GRADFJ_list2)) ', mean is ' num2str(mean(GRADFJ_list2)) ', variance is ' num2str(var(GRADFJ_list2))]);
+disp(['K=' num2str(K) ', T=' num2str(T), ': median is ' num2str(median(GRADFJ_list3)) ', mean is ' num2str(mean(GRADFJ_list3)) ', variance is ' num2str(var(GRADFJ_list3))]);
+disp(['KKT Results:']);
+disp(['K=' num2str(K/100) ', T=' num2str(T), ': median is ' num2str(median(GRADKKT_list1)) ', mean is ' num2str(mean(GRADKKT_list1)) ', variance is ' num2str(var(GRADKKT_list1))]);
+disp(['K=' num2str(K/10) ', T=' num2str(T), ': median is ' num2str(median(GRADKKT_list2)) ', mean is ' num2str(mean(GRADKKT_list2)) ', variance is ' num2str(var(GRADKKT_list2))]);
+disp(['K=' num2str(K) ', T=' num2str(T), ': median is ' num2str(median(GRADKKT_list3)) ', mean is ' num2str(mean(GRADKKT_list3)) ', variance is ' num2str(var(GRADKKT_list3))]);
+
+% save('result','GRADFJ_list1','GRADFJ_list2','GRADFJ_list3','GRADKKT_list1','GRADKKT_list2','GRADKKT_list3');
 
 
 % define the functions
