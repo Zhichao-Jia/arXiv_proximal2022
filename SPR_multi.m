@@ -5,7 +5,7 @@ global m n p rho rhohat epsilon flb glb domain A b xc
 
 m = 120;
 n = 120;
-p = 320;
+p = 90;
 domain = 10;
 epsilon = 0.01;
 flb = 0;
